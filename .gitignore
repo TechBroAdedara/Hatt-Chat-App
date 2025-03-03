@@ -1,7 +1,8 @@
 bin/
 obj/
 .vscode/
-
+Hatt/appsettings.json
+Hatt/appsettings.Development.json
 *.db
 *.mdf
 *.ldf
