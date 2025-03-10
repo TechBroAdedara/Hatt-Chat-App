@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Hatt.Dtos;
 
-public record AddUserDto
+public record UserCreateDto
 (
     [Required]
     string Firstname,
@@ -17,7 +17,7 @@ public record AddUserDto
     string Password
 );
 
-public record DisplayUserDto(
+public record UserDisplayDto(
     [Required]
     string Firstname,
     [Required]

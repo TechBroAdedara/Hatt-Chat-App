@@ -22,15 +22,11 @@ namespace Hatt.Controllers
         [HttpGet("{conversationId}/messages")]
         public async Task<IActionResult> GetMessagesForConversation(int conversationId)
         {
-            try
-            {
-                var messages = await _conversationService.GetMessagesAsync(conversationId);
-                return Ok(messages);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new {message = ex.Message});
-            }
+
+            var messages = await _conversationService.GetMessagesAsync(conversationId);
+            return Ok(messages);
+
+
         }
 
         [HttpPost("{conversationId}/messages")]

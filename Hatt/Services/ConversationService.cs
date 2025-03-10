@@ -2,6 +2,7 @@ using System;
 using Hatt.Dtos;
 using Hatt.Models;
 using Hatt.Repositories;
+using Hatt.Middleware;
 
 namespace Hatt.Services;
 public interface IConversationService
@@ -17,15 +18,6 @@ public class ConversationService(IConversationRepository conversationRepository)
     private readonly IConversationRepository _conversationRepository = conversationRepository;
 
     //Task to create new conversation
-    public async Task<ConversationDto?> GetConversationByIdAsync(int conversationId)
-    {
-        var existingConversation = await _conversationRepository.GetConversationByIdAsync(conversationId);
-        if (existingConversation == null)
-        {
-            return null;
-        }
-        return existingConversation.AsDto();
-    }
     public async Task<ConversationDto> CreateConversationAsync(ConversationDto conversationDto)
     {
         var newConversation = await _conversationRepository.CreateConversationAsync(conversationDto);
@@ -44,6 +36,10 @@ public class ConversationService(IConversationRepository conversationRepository)
             }
             return [.. messages];
         }
+        catch(KeyNotFoundException ex)
+        {
+            throw new HttpResponseException(404, ex.Message);
+        }
         catch (Exception)
         {
             throw;
@@ -53,11 +49,42 @@ public class ConversationService(IConversationRepository conversationRepository)
     //Task to add a new message to a conversation
     public async Task<AddMessageDto> AddMessageToConversationAsync(int conversationId, AddMessageDto messageDto)
     {
-        if (await GetConversationByIdAsync(conversationId) == null)
-        {
-            throw new Exception("Conversation not found");
+        try{
+            if (await GetConversationByIdAsync(conversationId) == null)
+            {
+                throw new KeyNotFoundException("Conversation not found");
+            }
+            var message = await _conversationRepository.AddMessageToConversationAsync(conversationId, messageDto);
+            return message;
         }
-        var message = await _conversationRepository.AddMessageToConversationAsync(conversationId, messageDto);
-        return message;
+        catch (KeyNotFoundException ex)
+        {
+            throw new HttpResponseException(404, ex.Message);
+        }
+        catch (Exception)
+        {
+            throw;
+        }
+        
+    }
+    public async Task<ConversationDto?> GetConversationByIdAsync(int conversationId)
+    {
+        try
+        {
+            var existingConversation = await _conversationRepository.GetConversationByIdAsync(conversationId);
+            if (existingConversation == null)
+            {
+                throw new KeyNotFoundException("Conversation not found");
+            }
+            return existingConversation.AsDto();
+        }
+        catch (KeyNotFoundException ex)
+        {
+            throw new HttpResponseException(404, ex.Message);
+        }
+        catch (Exception)
+        {
+            throw;
+        }
     }
 }

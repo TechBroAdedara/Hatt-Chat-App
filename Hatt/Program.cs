@@ -1,5 +1,6 @@
 
 using Hatt.Data;
+using Hatt.Middleware;
 using Hatt.Repositories;
 using Hatt.Services;
 using Microsoft.EntityFrameworkCore;
@@ -19,13 +20,17 @@ public class Program
         builder.Services.AddDbContext<HattDbContext>(options => options.UseMySql(
             builder.Configuration.GetConnectionString("DefaultConnection"),
             new MySqlServerVersion(new Version(8, 0, 39))));
+                
         builder.Services.AddScoped<IConversationRepository, ConversationRepository>();
         builder.Services.AddScoped<IConversationService, ConversationService>();
 
         builder.Services.AddScoped<IUserRepository, UserRepository>();
         builder.Services.AddScoped<IUserService, UserService>();
         
+    
         var app = builder.Build();
+
+        app.UseMiddleware<ExceptionMiddleware>();
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())

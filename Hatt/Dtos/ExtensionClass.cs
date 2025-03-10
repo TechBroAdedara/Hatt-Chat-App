@@ -5,16 +5,17 @@ namespace Hatt.Dtos;
 
 public static class ExtensionClass
 {
-    public static ConversationDto AsDto(this Conversation conversation){
+    public static ConversationDto AsDto(this Conversation conversation)
+    {
         return new ConversationDto(
             conversation.Name,
             conversation.Type,
             conversation.Participants
         );
     }
-    public static DisplayUserDto ToDisplayUserDto(this User user)
+    public static UserDisplayDto ToUserDisplayDto(this User user)
     {
-        return new DisplayUserDto(
+        return new UserDisplayDto(
             user.Firstname,
             user.Lastname,
             user.Email,

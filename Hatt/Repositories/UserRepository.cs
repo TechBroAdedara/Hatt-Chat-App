@@ -5,9 +5,10 @@ using Hatt.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Hatt.Repositories;
-public interface IUserRepository{
-    Task<User> AddUserAsync(AddUserDto userDto);
-    Task<User?> GetUserByIdAsync(int userId);
+public interface IUserRepository
+{
+    Task<User> CreateUserAsync(UserCreateDto userDto, string hashed_password);
+    Task<User?> GetUserByEmailAsync(string email);
     Task<User?> GetUserByUsernameAsync(string username);
 }
 public class UserRepository(HattDbContext context) : IUserRepository
@@ -15,27 +16,29 @@ public class UserRepository(HattDbContext context) : IUserRepository
     private readonly HattDbContext _context = context;
 
     //Method to add a new user to the database
-    public async Task<User> AddUserAsync(AddUserDto userDto)
+    public async Task<User> CreateUserAsync(UserCreateDto userDto, string hashed_password)
     {
-        User newUser = new() {
+        User newUser = new()
+        {
             Firstname = userDto.Firstname,
             Lastname = userDto.Lastname,
             Email = userDto.Email,
             Username = userDto.Username,
-            HashedPassword =userDto.Password
-        } ;
+            HashedPassword = hashed_password
+        };
         _context.Users.Add(newUser);
         await _context.SaveChangesAsync();
         return newUser;
     }
 
     //Method to get specific user by ID
-    public async Task<User?> GetUserByIdAsync(int userId)
+    public async Task<User?> GetUserByEmailAsync(string email)
     {
-        var newUser = await _context.Users.FindAsync(userId);
-        return newUser;
+        var existingUser = await _context.Users.FirstOrDefaultAsync(n => n.Email == email);
+        return existingUser;
     }
 
+    //Method to get specific user by username
     public async Task<User?> GetUserByUsernameAsync(string username)
     {
         var existingUser = await _context.Users.FirstOrDefaultAsync(n => n.Username == username);

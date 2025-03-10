@@ -13,30 +13,26 @@ namespace Hatt.Controllers
     {
         private readonly IUserService _userService = userService;
         [HttpPost]
-        public async Task<IActionResult> AddUser(AddUserDto userDto)
+        public async Task<IActionResult> AddUser(UserCreateDto userDto)
         {
-            try{
-                var result = await _userService.AddUserAsync(userDto);
-                return Ok(result);
-            }
-            catch(Exception ex)
-            {
-                return BadRequest(new {message = ex.Message});
-            }            
-            
+            var result = await _userService.CreateUserAsync(userDto);
+            return Ok(result);
+
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetUserByIdAsync(int id)
+        [HttpGet("email/{email}")]
+        public async Task<IActionResult> GetUserByEmailAsync(string email)
         {
-            try{
-                var user = await _userService.GetUserByIdAsync(id);
-                return Ok(user);
-            }
-            catch(KeyNotFoundException)
-            {
-                return NotFound("User not found");
-            }
+            var user = await _userService.GetUserByEmailAsync(email);
+            return Ok(user);
+           
+        }
+
+        [HttpGet("username/{username}")]
+        public async Task<IActionResult> GetUserByUsernameAsync(string username)
+        {
+            var user = await _userService.GetUserByUsernameAsync(username);
+            return Ok(user);
         }
     }
 }

@@ -1,59 +1,95 @@
 using System;
 using Hatt.Dtos;
+using Hatt.Middleware;
 using Hatt.Models;
 using Hatt.Repositories;
+using BCrypt.Net;
 
 namespace Hatt.Services;
-public interface IUserService{
-    Task<DisplayUserDto> GetUserByIdAsync(int userId);
-    Task<DisplayUserDto?> AddUserAsync(AddUserDto userDto);
+
+//User Service Interface
+public interface IUserService
+{
+    Task<UserDisplayDto> GetUserByEmailAsync(string email);
+    Task<UserDisplayDto?> CreateUserAsync(UserCreateDto newUser);
+    Task<UserDisplayDto?> GetUserByUsernameAsync(string username);
 }
-public class UserService(IUserRepository userRepository): IUserService
+
+//User Service Implementation
+public class UserService(IUserRepository userRepository) : IUserService
 {
     private readonly IUserRepository _userRepository = userRepository;
 
-    public async Task<DisplayUserDto> GetUserByIdAsync(int userId)
+    //Method to create user
+    public async Task<UserDisplayDto?> CreateUserAsync(UserCreateDto newUser)
     {
-        try{
-            var user = await _userRepository.GetUserByIdAsync(userId) ?? throw new KeyNotFoundException("User not found");
-            return user.ToDisplayUserDto();
-        }
-        catch (Exception)
+        try
         {
-            throw;
-        }
-        
-    }
-    public async Task<DisplayUserDto?> GetUserByUsernameAsync(string username)
-    {
-        try{
-            var existingUser = await _userRepository.GetUserByUsernameAsync(username) ?? throw new KeyNotFoundException("User not found");
-            return existingUser.ToDisplayUserDto();
-        }
-        catch (Exception)
-        {
-            throw;
-        }
-        
-    }
-    public async Task<DisplayUserDto?> AddUserAsync(AddUserDto userDto)
-    {
-        try{
-            ArgumentNullException.ThrowIfNull(userDto);
-
-            var existingUser = await GetUserByUsernameAsync(userDto.Username);
+            //If the passed argument is empty
+            ArgumentNullException.ThrowIfNull(newUser);
+            
+            //Check if the user already exists
+            var existingUser = await _userRepository.GetUserByUsernameAsync(newUser.Username) ?? await _userRepository.GetUserByEmailAsync(newUser.Email);
             if (existingUser != null)
             {
-                throw new InvalidOperationException($"User with username '{userDto.Username}' already exists");
+                throw new InvalidOperationException($"User with username '{newUser.Username}' or email '{newUser.Email}' already exists");
             }
-
-            var newUser = await _userRepository.AddUserAsync(userDto);
-            return newUser.ToDisplayUserDto();
+            var hashed_password = BCrypt.Net.BCrypt.HashPassword(newUser.Password);
+            var createdUser = await _userRepository.CreateUserAsync(newUser, hashed_password);
+            return createdUser.ToUserDisplayDto();
+        }
+        catch(ArgumentNullException)
+        {   
+            //Custom exception handled by the custom exception handler
+            throw new HttpResponseException(400, "Invalid request payload");
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new HttpResponseException(400, ex.Message);
         }
         catch (Exception)
         {
             throw;
         }
-        
+
     }
+
+    //Getting user by Email
+    public async Task<UserDisplayDto> GetUserByEmailAsync(string email)
+    {
+        try
+        {   //Check if the user exists
+            var user = await _userRepository.GetUserByEmailAsync(email) ?? throw new KeyNotFoundException("User not found");
+            return user.ToUserDisplayDto();
+        }
+        catch (KeyNotFoundException)
+        {
+            throw new HttpResponseException(404, "User not found");
+        }
+        catch (Exception)
+        {
+            throw;
+        }
+
+    }
+
+    //Getting user by Username
+    public async Task<UserDisplayDto?> GetUserByUsernameAsync(string username)
+    {
+        try
+        {
+            var existingUser = await _userRepository.GetUserByUsernameAsync(username) ?? throw new KeyNotFoundException("User not found");
+            return existingUser.ToUserDisplayDto();
+        }
+        catch (KeyNotFoundException ex )
+        {
+            throw new HttpResponseException(404, ex.Message);
+        }
+        catch (Exception)
+        {
+            throw;
+        }
+
+    }
+
 }
