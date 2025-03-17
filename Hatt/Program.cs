@@ -1,12 +1,9 @@
-
 using Hatt.Data;
-using Hatt.Middleware;
+using Hatt.Infrastructure;
 using Hatt.Repositories;
 using Hatt.Services;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
-
-namespace Hatt;
 
 public class Program
 {
@@ -20,17 +17,23 @@ public class Program
         builder.Services.AddDbContext<HattDbContext>(options => options.UseMySql(
             builder.Configuration.GetConnectionString("DefaultConnection"),
             new MySqlServerVersion(new Version(8, 0, 39))));
-                
+
+        // Conversation Service and Repository
         builder.Services.AddScoped<IConversationRepository, ConversationRepository>();
         builder.Services.AddScoped<IConversationService, ConversationService>();
 
+        // User Service and Repository
         builder.Services.AddScoped<IUserRepository, UserRepository>();
         builder.Services.AddScoped<IUserService, UserService>();
-        
-    
+
+        // Global Exception Handler Configuration
+        builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+        builder.Services.AddProblemDetails();
+
         var app = builder.Build();
 
-        app.UseMiddleware<ExceptionMiddleware>();
+
+
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
@@ -39,6 +42,9 @@ public class Program
             app.MapOpenApi();
         }
 
+        // Configure Exception Handler Middleware
+        app.UseExceptionHandler();
+        app.UseRouting();
         app.UseHttpsRedirection();
         app.UseAuthorization();
 
