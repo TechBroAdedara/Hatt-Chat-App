@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using Hatt.Models;
 
 namespace Hatt.Dtos;
@@ -19,7 +20,18 @@ public static class ExtensionClass
             user.Firstname,
             user.Lastname,
             user.Email,
-            user.Username
+            user.UserName
+        );
+    }
+    
+    public static ConversationDisplayDto AsDisplayDto(this Conversation conversation)
+    {
+        return new ConversationDisplayDto
+        (
+            conversation.Id,
+            conversation.Name,
+            conversation.Type,
+            conversation.Participants
         );
     }
 }

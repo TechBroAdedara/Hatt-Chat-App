@@ -6,17 +6,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Hatt.Repositories;
 public interface IConversationRepository{
-    Task<ConversationDto> CreateConversationAsync(ConversationDto conversationDto);
+    Task<ConversationDisplayDto> CreateConversationAsync(ConversationDto conversationDto);
     Task<Conversation?> GetConversationByIdAsync(int conversationId);
     Task<IEnumerable<Message>> GetMessagesAsync(int conversationId);
-    Task<AddMessageDto> AddMessageToConversationAsync(int conversationId, AddMessageDto message);
+    Task<AddMessageDto> AddMessageToConversationAsync(int conversationId, AddMessageDto message, string senderUserName);
+    Task AddNewConversationUser(string userId, int conversationId);
+    Task<List<User>> GetUsersInConversation(int conversationId);
 
 }
 public class ConversationRepository(HattDbContext context) : IConversationRepository
 {
     private readonly HattDbContext _context = context;
 
-    public async Task<ConversationDto> CreateConversationAsync(ConversationDto conversationDto)
+    public async Task<ConversationDisplayDto> CreateConversationAsync(ConversationDto conversationDto)
     {
        Conversation newConversation = new(){
         Name = conversationDto.Name,
@@ -26,7 +28,7 @@ public class ConversationRepository(HattDbContext context) : IConversationReposi
        };
         await _context.Conversations.AddAsync(newConversation);
         await _context.SaveChangesAsync();
-        return conversationDto;
+        return newConversation.AsDisplayDto();
     }
     public async Task<Conversation?> GetConversationByIdAsync(int conversationId)
     {
@@ -38,11 +40,11 @@ public class ConversationRepository(HattDbContext context) : IConversationReposi
         var messages = await _context.Messages.Where(m => m.ConversationId == conversationId).ToListAsync();
         return messages;
     }
-    public async Task<AddMessageDto> AddMessageToConversationAsync(int conversationId, AddMessageDto messageDto)
+    public async Task<AddMessageDto> AddMessageToConversationAsync(int conversationId, AddMessageDto messageDto, string senderUserName)
     {
         Message newMessage = new(){
-            Sender_id = messageDto.Sender_id,
-            SentAt = messageDto.SentAt,
+            SenderUsername = senderUserName,
+            SentAt = DateTime.UtcNow,
             Content = messageDto.Content,
             ConversationId = conversationId
         };
@@ -50,4 +52,31 @@ public class ConversationRepository(HattDbContext context) : IConversationReposi
         await _context.SaveChangesAsync();
         return messageDto;
     }
+
+    public async Task AddNewConversationUser(string userId, int conversationId)
+    {
+        var newConversationUser = new ConversationUser
+        {
+            UserId = userId,
+            ConversationId = conversationId
+        };
+        try
+        {
+            _context.ConversationsUsers.Add(newConversationUser);
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            throw;
+        }
+        
+    }
+    public async Task<List<User>> GetUsersInConversation(int conversationId)
+    {
+        var users = await _context.ConversationsUsers.Where(c => c.ConversationId == conversationId)
+            .Select(c => c.User)
+            .ToListAsync();
+        return users;
+    }
+
 }

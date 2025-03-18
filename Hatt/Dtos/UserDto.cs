@@ -12,7 +12,7 @@ public record UserCreateDto
     [Required]
     string Email,
     [Required]
-    string Username,
+    string UserName,
     [Required]
     string Password
 );
@@ -25,5 +25,5 @@ public record UserDisplayDto(
     [Required]
     string Email,
     [Required]
-    string Username
+    string UserName
 );

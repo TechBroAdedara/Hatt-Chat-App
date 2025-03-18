@@ -14,3 +14,10 @@ public record ConversationDto (
 public record UpdateConversationDto(
     int Id, string Name
 );
+
+public record ConversationDisplayDto(
+    int Id,
+    string Name, 
+    ConversationType Type,
+    int Participants
+    );

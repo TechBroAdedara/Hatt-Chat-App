@@ -15,6 +15,7 @@ namespace Hatt.Infrastructure
                 ArgumentNullException => StatusCodes.Status400BadRequest,
                 KeyNotFoundException => StatusCodes.Status404NotFound,
                 InvalidOperationException => StatusCodes.Status400BadRequest,
+                UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
                 _ => StatusCodes.Status500InternalServerError
             };
             logger.LogError($"{DateTime.UtcNow} An error {statusCode} occured : {exception.Message}");
@@ -23,7 +24,7 @@ namespace Hatt.Infrastructure
             {
                 Status = statusCode,
                 Title = GetTitleForException(exception),
-                Detail = exception.Message,
+                Detail = statusCode != 500 ? exception.Message : "Something went wrong. Contact Admin.",
             };
 
             httpContext.Response.StatusCode = statusCode;
@@ -39,6 +40,7 @@ namespace Hatt.Infrastructure
                 ArgumentNullException => "Invalid Argument",
                 KeyNotFoundException => "Resource Not Found",
                 InvalidOperationException => "Invalid Operation",
+                UnauthorizedAccessException => "Not Authorized",
                 _ => "An error occured"
             };
         }

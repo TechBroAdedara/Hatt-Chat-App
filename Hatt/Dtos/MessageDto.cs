@@ -4,7 +4,7 @@ namespace Hatt.Dtos;
 
 public record AddMessageDto
 (
-    int Sender_id,
-    DateTime SentAt,
-    string Content
+    string Content,
+    int ConversationId
 );
+
