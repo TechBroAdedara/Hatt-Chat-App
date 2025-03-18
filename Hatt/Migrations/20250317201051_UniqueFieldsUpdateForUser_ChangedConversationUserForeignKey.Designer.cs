@@ -4,6 +4,7 @@ using Hatt.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Hatt.Migrations
 {
     [DbContext(typeof(HattDbContext))]
-    partial class HattDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250317201051_UniqueFieldsUpdateForUser_ChangedConversationUserForeignKey")]
+    partial class UniqueFieldsUpdateForUser_ChangedConversationUserForeignKey
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -66,7 +69,7 @@ namespace Hatt.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<string>("UserId")
+                    b.Property<string>("UserName")
                         .IsRequired()
                         .HasColumnType("varchar(255)");
 
@@ -74,7 +77,7 @@ namespace Hatt.Migrations
 
                     b.HasIndex("ConversationId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserName");
 
                     b.ToTable("ConversationsUsers");
                 });
@@ -209,7 +212,7 @@ namespace Hatt.Migrations
 
                     b.HasOne("Hatt.Models.User", "User")
                         .WithMany("ConversationUsers")
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("UserName")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

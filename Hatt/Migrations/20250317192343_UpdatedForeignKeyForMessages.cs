@@ -5,24 +5,18 @@
 namespace Hatt.Migrations
 {
     /// <inheritdoc />
-    public partial class UpdatedUserModel : Migration
+    public partial class UpdatedForeignKeyForMessages : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.RenameColumn(
-                name: "type",
-                table: "Conversations",
-                newName: "Type");
+
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.RenameColumn(
-                name: "Type",
-                table: "Conversations",
-                newName: "type");
+
         }
     }
 }
