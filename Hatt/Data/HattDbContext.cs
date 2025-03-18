@@ -30,5 +30,16 @@ public class HattDbContext(DbContextOptions<HattDbContext> options) : DbContext(
         modelBuilder.Entity<User>()
             .HasIndex(u => u.PhoneNumber)
             .IsUnique();
+        modelBuilder.Entity<FriendRequest>()
+            .HasOne(fr => fr.Sender)
+            .WithMany(u => u.SentFriendRequests)
+            .HasForeignKey(fr => fr.SenderId)
+            .OnDelete(DeleteBehavior.Restrict); // Prevents cascade delete issues
+
+        modelBuilder.Entity<FriendRequest>()
+            .HasOne(fr => fr.Reciever)
+            .WithMany(u => u.RecievedFriendRequests)
+            .HasForeignKey(fr => fr.RecieverId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

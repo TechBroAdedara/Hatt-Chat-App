@@ -16,6 +16,7 @@ namespace Hatt.Infrastructure
                 KeyNotFoundException => StatusCodes.Status404NotFound,
                 InvalidOperationException => StatusCodes.Status400BadRequest,
                 UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
+                ArgumentOutOfRangeException => StatusCodes.Status400BadRequest,
                 _ => StatusCodes.Status500InternalServerError
             };
             logger.LogError($"{DateTime.UtcNow} An error {statusCode} occured : {exception.Message}");
@@ -41,6 +42,7 @@ namespace Hatt.Infrastructure
                 KeyNotFoundException => "Resource Not Found",
                 InvalidOperationException => "Invalid Operation",
                 UnauthorizedAccessException => "Not Authorized",
+                ArgumentOutOfRangeException => "Invalid motive",
                 _ => "An error occured"
             };
         }

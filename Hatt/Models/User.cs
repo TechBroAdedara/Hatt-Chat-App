@@ -8,5 +8,12 @@ public class User: IdentityUser
     public string Lastname { get; set; } = string.Empty!;
 
     public List<ConversationUser> ConversationUsers { get; set; } = [];
+    
+    //Requests sent by user
+    public List<FriendRequest> SentFriendRequests { get; set; } = [];
+
+    //Requests recieved by user
+    public List<FriendRequest> RecievedFriendRequests { get; set; } = [];
+
 }
 

@@ -34,4 +34,16 @@ public static class ExtensionClass
             conversation.Participants
         );
     }
+    public static FriendRequestDisplayDto AsDisplayDto(this FriendRequest friendRequest)
+    {
+        return new FriendRequestDisplayDto
+            (
+            friendRequest.Id,
+            friendRequest.SenderId,
+            friendRequest.Sender.UserName,
+            friendRequest.RecieverId,
+            friendRequest.Reciever.UserName,
+            friendRequest.SentAt
+            );
+    }
 }

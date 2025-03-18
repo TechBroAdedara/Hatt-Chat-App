@@ -56,7 +56,7 @@ namespace Hatt.Authentication
         //LOGIN METHOD
         public async Task<string> Login(LoginModel model)
         {
-            var user = await _userManager.FindByEmailAsync(model.Email);
+            var user = await _userManager.FindByEmailAsync(model.Username) ?? await _userRepository.GetUserByUserNameAsync(model.Username);
             if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password))
             {
                 throw new UnauthorizedAccessException("Invalid email or password");

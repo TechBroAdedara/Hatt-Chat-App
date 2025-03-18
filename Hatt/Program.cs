@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace Hatt
 {
@@ -25,6 +26,11 @@ namespace Hatt
             builder.Services.AddDbContext<HattDbContext>(options => options.UseMySql(
                 builder.Configuration.GetConnectionString("DefaultConnection"),
                 new MySqlServerVersion(new Version(8, 0, 39))));
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                                {
+                                    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                                });
 
 
             builder.Services.AddIdentity<User, IdentityRole>()
