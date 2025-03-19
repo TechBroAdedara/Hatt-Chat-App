@@ -9,9 +9,7 @@ public class Message
     public string SenderUsername { get; set; } = string.Empty!;
     public DateTime SentAt { get; set; }
     public string Content { get; set; } = string.Empty;
-
-    [ForeignKey("Conversation")]
-    public int ConversationId { get; set; }
+    public Guid ConversationId { get; set; }
     public Conversation? Conversation { get; set; }
 
 }

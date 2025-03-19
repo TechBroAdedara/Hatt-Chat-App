@@ -2,9 +2,15 @@ using System;
 
 namespace Hatt.Dtos;
 
-public record AddMessageDto
+public record MessageDto
 (
     string Content,
-    int ConversationId
+    Guid ConversationId
 );
 
+public record DisplayMessageDto
+    (
+    string Content,
+    Guid ConversationId,
+    string SenderUsername
+    );

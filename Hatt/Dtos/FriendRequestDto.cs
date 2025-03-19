@@ -1,4 +1,6 @@
-﻿namespace Hatt.Dtos
+﻿using Hatt.Models;
+
+namespace Hatt.Dtos
 {
     public record FriendRequestDisplayDto
     (
@@ -9,4 +11,11 @@
         string RecieverUsername,
         DateTime SentAt
     );
+
+    public class FriendRequestResponseDto
+    {
+        public FriendshipStatus Status { get; set; }
+        public ConversationDisplayDto? Conversation { get; set; }
+    }
+
 }

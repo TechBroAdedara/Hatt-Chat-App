@@ -41,5 +41,20 @@ public class HattDbContext(DbContextOptions<HattDbContext> options) : DbContext(
             .WithMany(u => u.RecievedFriendRequests)
             .HasForeignKey(fr => fr.RecieverId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Conversation>()
+           .Property(c => c.Id)
+           .HasColumnType("CHAR(36)")
+           .HasDefaultValueSql("(UUID())"); // Generates GUID in MySQL
+
+        modelBuilder.Entity<Message>()
+            .Property(m => m.ConversationId)
+            .HasColumnType("CHAR(36)");
+
+        modelBuilder.Entity<Message>()
+            .HasOne(m => m.Conversation)
+            .WithMany(c => c.Messages)
+            .HasForeignKey(m => m.ConversationId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

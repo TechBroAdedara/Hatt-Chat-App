@@ -24,11 +24,10 @@ namespace Hatt.Migrations
 
             modelBuilder.Entity("Hatt.Models.Conversation", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("CHAR(36)")
+                        .HasDefaultValueSql("(UUID())");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -53,8 +52,8 @@ namespace Hatt.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("ConversationId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("CHAR(36)");
 
                     b.Property<DateTime>("JoinedAt")
                         .HasColumnType("datetime(6)");
@@ -122,8 +121,8 @@ namespace Hatt.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<int>("ConversationId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("CHAR(36)");
 
                     b.Property<string>("SenderUsername")
                         .IsRequired()

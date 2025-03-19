@@ -15,17 +15,17 @@ namespace Hatt.Controllers
     {
         private readonly IConversationService _conversationService = conversationService;
 
-        [HttpPost()]
-        public async Task<IActionResult> CreateNewConversationAsync(ConversationDto conversation)
-        {
-            var Id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        //[HttpPost()]
+        //public async Task<IActionResult> CreateNewConversationAsync(ConversationDto conversation)
+        //{
+        //    var Id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             
-            var newConversation = await _conversationService.CreateConversationAsync(Id,conversation);
-            return Ok(newConversation);
-        }
+        //    var newConversation = await _conversationService.CreateConversationAsync(Id,conversation);
+        //    return Ok(newConversation);
+        //}
 
-        [HttpGet("{conversationId}/messages")]
-        public async Task<IActionResult> GetMessagesForConversation(int conversationId)
+        [HttpGet("messages")]
+        public async Task<IActionResult> GetMessagesForConversation([FromQuery] Guid conversationId)
         {
 
             var messages = await _conversationService.GetMessagesAsync(conversationId);
@@ -34,12 +34,12 @@ namespace Hatt.Controllers
 
         }
 
-        [HttpPost("{conversationId}/messages")]
-        public async Task<IActionResult> AddMessageToConversationAsync(int conversationId, AddMessageDto message)
+        [HttpPost("messages")]
+        public async Task<IActionResult> AddMessageToConversationAsync(MessageDto message)
         {
             var userName = User.FindFirst("username")?.Value;
 
-            await _conversationService.AddMessageToConversationAsync(conversationId, message, userName);
+            await _conversationService.AddMessageToConversationAsync(message.ConversationId, message, userName);
             return Ok(message);
         }
     }

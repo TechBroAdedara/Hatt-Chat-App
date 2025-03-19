@@ -1,5 +1,6 @@
 using Hatt.Authentication;
 using Hatt.Data;
+using Hatt.Hubs;
 using Hatt.Infrastructure;
 using Hatt.Models;
 using Hatt.Repositories;
@@ -36,6 +37,8 @@ namespace Hatt
             builder.Services.AddIdentity<User, IdentityRole>()
                 .AddEntityFrameworkStores<HattDbContext>()
                 .AddDefaultTokenProviders();
+
+            builder.Services.AddSignalR();
 
             // Configure JWT Authentication
             var jwtKey = builder.Configuration["Jwt:Key"];
@@ -102,6 +105,7 @@ namespace Hatt
             app.UseAuthentication();
             app.UseAuthorization();
 
+            app.MapHub<ChatHub>("/chat");
             app.MapControllers();
 
             app.Run();

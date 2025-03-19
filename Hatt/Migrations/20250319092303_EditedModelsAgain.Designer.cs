@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Hatt.Migrations
 {
     [DbContext(typeof(HattDbContext))]
-    [Migration("20250318045951_UpdatedFriendRequests")]
-    partial class UpdatedFriendRequests
+    [Migration("20250319092303_EditedModelsAgain")]
+    partial class EditedModelsAgain
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,11 +27,10 @@ namespace Hatt.Migrations
 
             modelBuilder.Entity("Hatt.Models.Conversation", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("CHAR(36)")
+                        .HasDefaultValueSql("(UUID())");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -56,8 +55,8 @@ namespace Hatt.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("ConversationId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("CHAR(36)");
 
                     b.Property<DateTime>("JoinedAt")
                         .HasColumnType("datetime(6)");
@@ -125,8 +124,8 @@ namespace Hatt.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<int>("ConversationId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("CHAR(36)");
 
                     b.Property<string>("SenderUsername")
                         .IsRequired()

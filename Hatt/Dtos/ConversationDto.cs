@@ -16,7 +16,7 @@ public record UpdateConversationDto(
 );
 
 public record ConversationDisplayDto(
-    int Id,
+    Guid Id,
     string Name, 
     ConversationType Type,
     int Participants

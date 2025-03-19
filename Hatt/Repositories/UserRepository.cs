@@ -16,8 +16,8 @@ public interface IUserRepository
     Task<ICollection<FriendRequest>> GetUserFriends(string myUsername); //Getting Users friends
     Task<FriendRequest> SendFriendRequest(string senderId, string recieverId); //Sending Friend Request
     Task UpdateFriendRequest(FriendshipStatusMotive motive, FriendRequest request ); //Handling a friend request - Accept or Decline
-    Task<ICollection<FriendRequest>> GetPendingRecievedRequests(string mySenderId); //Get all pending friend requests recieved by user
-    Task<ICollection<FriendRequest>> GetPendingSentRequests(string mySenderId); //Get all pending friend requests sent by user
+    Task<ICollection<FriendRequestDisplayDto>> GetPendingRecievedRequests(string mySenderId); //Get all pending friend requests recieved by user
+    Task<ICollection<FriendRequestDisplayDto>> GetPendingSentRequests(string mySenderId); //Get all pending friend requests sent by user
 
 }
 
@@ -84,33 +84,44 @@ public class UserRepository(HattDbContext context) : IUserRepository
         };
         await _context.FriendRequests.AddAsync(friendRequest);
         await _context.SaveChangesAsync();
-        return friendRequest;
+
+        var request = await GetFriendRequestById(friendRequest.Id);
+        return request;
     }
 
     //Getting friend request by specific Id
     public async Task<FriendRequest?> GetFriendRequestById(int requestId)
     {
-        var friendRequest = await _context.FriendRequests.FirstOrDefaultAsync(fr => fr.Id == requestId);
+        var friendRequest = await _context.FriendRequests
+            .Include(fr => fr.Sender)
+            .Include(fr => fr.Reciever)
+            .FirstOrDefaultAsync(fr => fr.Id == requestId);
         return friendRequest;
     }
     
     //Get pending requests recieved by user
     //Will be supplied specific user's Id to check if they have a friend request from them
-    public async Task<ICollection<FriendRequest>> GetPendingRecievedRequests(string mySenderId)
+    public async Task<ICollection<FriendRequestDisplayDto>> GetPendingRecievedRequests(string mySenderId)
     {
         var pendingRecievedRequests = await _context.FriendRequests
             .Where(n => n.RecieverId == mySenderId //You, the reciever
                     && n.Status == FriendshipStatus.Pending)
+            .Include(n => n.Sender)
+            .Include(n=> n.Reciever)
+            .Select(n => n.AsDisplayDto())
             .ToListAsync();
         return pendingRecievedRequests;
     }
 
     //Get pending requests sent by user
-    public async Task<ICollection<FriendRequest>> GetPendingSentRequests(string mySenderId)
+    public async Task<ICollection<FriendRequestDisplayDto>> GetPendingSentRequests(string mySenderId)
     {
         var pendingSentRequests = await _context.FriendRequests
             .Where(n => n.SenderId== mySenderId
                     && n.Status == FriendshipStatus.Pending)
+            .Include(n => n.Sender)
+            .Include(n => n.Reciever)
+            .Select (n => n.AsDisplayDto())
             .ToListAsync();
         return pendingSentRequests;
     }

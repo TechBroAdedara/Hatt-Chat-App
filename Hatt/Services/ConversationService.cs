@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using Hatt.Dtos;
 using Hatt.Models;
 using Hatt.Repositories;
@@ -6,12 +7,12 @@ using Hatt.Repositories;
 namespace Hatt.Services;
 public interface IConversationService
 {   
-    Task<ConversationDisplayDto> CreateConversationAsync(string userId, ConversationDto conversationDto);
-    Task<ConversationDto?> GetConversationByIdAsync(int Id);
-    Task<List<Message>> GetMessagesAsync(int conversationId);
-    Task<AddMessageDto> AddMessageToConversationAsync(int conversationId, AddMessageDto messageToAdd, string senderUserName);
-    
-    Task<List<User>> GetUsersInConversation(int conversationId);
+    Task<ConversationDisplayDto> CreateConversationAsync(string userId1, string userId2, int participants, ConversationType type);
+    Task<Conversation?> GetConversationByIdAsync(Guid conversationId);
+    Task<List<DisplayMessageDto>> GetMessagesAsync(Guid conversationId);
+    Task<MessageDto> AddMessageToConversationAsync(Guid conversationId, MessageDto messageToAdd, string senderUserName);
+    Task<ConversationUserDto> AddNewConversationUser(string userId, Guid conversationId);
+    Task<ICollection<ConversationUserDto>> GetConversationUsers(Guid conversationId);
 }
 
 //IMPLEMENTATION
@@ -20,28 +21,35 @@ public class ConversationService(IConversationRepository conversationRepository)
     private readonly IConversationRepository _conversationRepository = conversationRepository;
 
     //Task to create new conversation
-    public async Task<ConversationDisplayDto> CreateConversationAsync(string userId, ConversationDto conversationDto)
+    public async Task<ConversationDisplayDto> CreateConversationAsync(string userId, string userId2, int participants, ConversationType type)
     {
-        var newConversation = await _conversationRepository.CreateConversationAsync(conversationDto);
-        await AddNewConversationUser(userId, newConversation.Id);
-        return newConversation;
+        var newConversation = new ConversationDto
+        (
+            Name: "New Conversation", //Hard Coded. Have to fix
+            Type: type,
+            Participants: participants
+        );
+        var addedConversation = await _conversationRepository.CreateConversationAsync(newConversation);
+
+        return addedConversation;
     }
 
+
     //Task to Get all messages belonging to a conversation
-    public async Task<List<Message>> GetMessagesAsync(int conversationId)
+    public async Task<List<DisplayMessageDto>> GetMessagesAsync(Guid conversationId)
     {
-        
-        var messages = await _conversationRepository.GetMessagesAsync(conversationId);
-        if (messages == null || !messages.Any())
+        var conversation = await _conversationRepository.GetConversationByIdAsync(conversationId);
+        if (conversation == null)
         {
             throw new KeyNotFoundException("Conversation not found");
         }
-        return [.. messages];
+
+        return [.. conversation.Messages.Select(m => m.AsDisplayDto())];
 
     }
 
-    //Task to add a new message to a conversation
-    public async Task<AddMessageDto> AddMessageToConversationAsync(int conversationId, AddMessageDto messageDto, string senderUserName)
+    //Task to add a new message to a conversation, after it has been sent to reciepient
+    public async Task<MessageDto> AddMessageToConversationAsync(Guid conversationId, MessageDto messageDto, string senderUserName)
     {
       
         if (await GetConversationByIdAsync(conversationId) == null)
@@ -49,11 +57,13 @@ public class ConversationService(IConversationRepository conversationRepository)
             throw new KeyNotFoundException("Conversation not found");
         }
         var message = await _conversationRepository.AddMessageToConversationAsync(conversationId, messageDto, senderUserName);
-        return message;
+        return message.AsMessageDto();
         
         
     }
-    public async Task<ConversationDto?> GetConversationByIdAsync(int conversationId)
+
+    //Getting a conversation by Id
+    public async Task<Conversation?> GetConversationByIdAsync(Guid conversationId)
     {
         
         var existingConversation = await _conversationRepository.GetConversationByIdAsync(conversationId);
@@ -61,22 +71,36 @@ public class ConversationService(IConversationRepository conversationRepository)
         {
             throw new KeyNotFoundException("Conversation not found");
         }
-        return existingConversation.AsDto();
+        return existingConversation;
         
     }
 
-    private async Task AddNewConversationUser(string userId, int conversationId)
+    //Add new users to a conversation
+    public async Task<ConversationUserDto> AddNewConversationUser(string userId, Guid conversationId)
     {
-        try { await _conversationRepository.AddNewConversationUser(userId, conversationId); }
-        catch {
-            throw;
-        };
+
+        Conversation? conversation = await GetConversationByIdAsync(conversationId);
+        //Gets the users already in the conversation
+        ICollection<ConversationUser> conversationUsers = await _conversationRepository.GetConversationUsers(conversationId);
+
+        //If the users in a public conversation are at their maximum, throw an exception when attempting to add more users
+        if((conversation?.Type == ConversationType.Private) && conversationUsers.Count == 2)
+        {
+            throw new InvalidOperationException("This is a private chat. Can't add more users");
+        }
+
+        ConversationUser addedConversationUser = await _conversationRepository.AddNewConversationUser(userId, conversationId);
+        return addedConversationUser.ToConversationUserDto();
+        
+
     }
 
-    //Not used by any other class for now
-    public async Task<List<User>> GetUsersInConversation(int conversationId)
+    //Getting users in a conversation
+    public async Task<ICollection<ConversationUserDto>> GetConversationUsers(Guid conversationId)
     {
-        var users = await _conversationRepository.GetUsersInConversation(conversationId);
-        return users;
+        ICollection<ConversationUserDto> conversationUsers = (await _conversationRepository.GetConversationUsers(conversationId))
+            .Select(cu => cu.ToConversationUserDto())
+            .ToList();
+        return conversationUsers;
     }
 }

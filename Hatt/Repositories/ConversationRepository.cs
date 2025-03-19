@@ -7,17 +7,18 @@ using Microsoft.EntityFrameworkCore;
 namespace Hatt.Repositories;
 public interface IConversationRepository{
     Task<ConversationDisplayDto> CreateConversationAsync(ConversationDto conversationDto);
-    Task<Conversation?> GetConversationByIdAsync(int conversationId);
-    Task<IEnumerable<Message>> GetMessagesAsync(int conversationId);
-    Task<AddMessageDto> AddMessageToConversationAsync(int conversationId, AddMessageDto message, string senderUserName);
-    Task AddNewConversationUser(string userId, int conversationId);
-    Task<List<User>> GetUsersInConversation(int conversationId);
+    Task<Conversation?> GetConversationByIdAsync(Guid conversationId);
+    Task<IEnumerable<Message>> GetMessagesAsync(Guid conversationId);
+    Task<Message> AddMessageToConversationAsync(Guid conversationId, MessageDto message, string senderUserName);
+    Task<ConversationUser> AddNewConversationUser(string userId, Guid conversationId);
+    Task<ICollection<ConversationUser>> GetConversationUsers(Guid conversationId);
 
 }
 public class ConversationRepository(HattDbContext context) : IConversationRepository
 {
     private readonly HattDbContext _context = context;
 
+    //Create a new conversation once a friend request has been accepted. Invoked in the user service class
     public async Task<ConversationDisplayDto> CreateConversationAsync(ConversationDto conversationDto)
     {
        Conversation newConversation = new(){
@@ -30,17 +31,26 @@ public class ConversationRepository(HattDbContext context) : IConversationReposi
         await _context.SaveChangesAsync();
         return newConversation.AsDisplayDto();
     }
-    public async Task<Conversation?> GetConversationByIdAsync(int conversationId)
+
+    //Get conversation by its UUID
+    public async Task<Conversation?> GetConversationByIdAsync(Guid conversationId)
     {
-        var conversation = await _context.Conversations.FindAsync(conversationId);
+        var conversation = await _context.Conversations
+            .Include(c => c.Messages)
+            .FirstOrDefaultAsync(c => c.Id == conversationId);
+
         return conversation;
     }
-    public async Task<IEnumerable<Message>> GetMessagesAsync(int conversationId)
+
+    //Get messages for a conversation
+    public async Task<IEnumerable<Message>> GetMessagesAsync(Guid conversationId)
     {
         var messages = await _context.Messages.Where(m => m.ConversationId == conversationId).ToListAsync();
         return messages;
     }
-    public async Task<AddMessageDto> AddMessageToConversationAsync(int conversationId, AddMessageDto messageDto, string senderUserName)
+
+    //Add a message to a conversation
+    public async Task<Message> AddMessageToConversationAsync(Guid conversationId, MessageDto messageDto, string senderUserName)
     {
         Message newMessage = new(){
             SenderUsername = senderUserName,
@@ -50,10 +60,10 @@ public class ConversationRepository(HattDbContext context) : IConversationReposi
         };
         _context.Messages.Add(newMessage);
         await _context.SaveChangesAsync();
-        return messageDto;
+        return newMessage;
     }
 
-    public async Task AddNewConversationUser(string userId, int conversationId)
+    public async Task<ConversationUser> AddNewConversationUser(string userId, Guid conversationId)
     {
         var newConversationUser = new ConversationUser
         {
@@ -64,6 +74,7 @@ public class ConversationRepository(HattDbContext context) : IConversationReposi
         {
             _context.ConversationsUsers.Add(newConversationUser);
             await _context.SaveChangesAsync();
+            return newConversationUser;
         }
         catch (DbUpdateException)
         {
@@ -71,12 +82,15 @@ public class ConversationRepository(HattDbContext context) : IConversationReposi
         }
         
     }
-    public async Task<List<User>> GetUsersInConversation(int conversationId)
+    public async Task<ICollection<ConversationUser>> GetConversationUsers(Guid conversationId)
     {
-        var users = await _context.ConversationsUsers.Where(c => c.ConversationId == conversationId)
-            .Select(c => c.User)
+        ICollection<ConversationUser> conversationUsers = await _context.ConversationsUsers
+            .Where(cu => cu.ConversationId == conversationId)
+            .Include(cu => cu.User)
+            .Include(cu => cu.Conversation)
             .ToListAsync();
-        return users;
+;
+        return conversationUsers;
     }
 
 }
